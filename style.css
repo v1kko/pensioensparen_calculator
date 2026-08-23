@@ -111,6 +111,12 @@ button:focus-visible, [tabindex]:focus-visible {
 .segmented button[aria-checked="true"] { color: var(--text-primary); background: var(--plane); border-color: var(--border); font-weight: 600; }
 
 /* ---- chart ------------------------------------------------------------- */
+.chart-card h2 .wenk {
+  margin-left: 10px;
+  font-size: 12.5px; font-weight: 400;
+  text-transform: none; letter-spacing: 0;
+  color: var(--text-muted);
+}
 .chart-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
 .legend { display: flex; gap: 16px; flex-wrap: wrap; }
 .legend .item { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text-secondary); }
