@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Pensioenbeleggen calculator</title>
-<meta name="description" content="Reken uit hoe je vermogen groeit als je maandelijks belegt voor je pensioen — inclusief inflatie en fondskosten.">
+<meta name="description" content="Zie hoe een maandelijkse of eenmalige inleg groeit bij een verwacht jaarrendement.">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
   <header class="page">
     <div>
       <h1>Pensioenbeleggen calculator</h1>
-      <p>Schuif aan de knoppen en zie hoe je vermogen groeit tot je pensioendatum — nominaal, gecorrigeerd voor inflatie, en afgezet tegen wat je zelf inlegt.</p>
+      <p>Kies een uitgangspunt, schuif aan het verwachte rendement en zie de vorm van de groei.</p>
     </div>
     <div class="spacer"></div>
     <button id="theme" type="button" aria-label="Wissel tussen licht en donker thema">Thema</button>
@@ -22,41 +22,35 @@
   <main class="layout">
 
     <section class="card controls" aria-labelledby="controls-title">
-      <h2 id="controls-title">Uitgangspunten</h2>
-      <div id="fields"></div>
-      <div class="actions">
-        <button id="copy" type="button">Link kopiëren</button>
-        <button id="reset" type="button">Herstel standaard</button>
+      <h2 id="controls-title">Uitgangspunt</h2>
+
+      <div class="field">
+        <div class="segmented" role="radiogroup" aria-label="Soort inleg">
+          <button type="button" role="radio" data-mode="maandelijks" aria-checked="true">Maandelijkse inleg</button>
+          <button type="button" role="radio" data-mode="eenmalig" aria-checked="false">Eenmalige inleg</button>
+        </div>
+        <p class="hint" id="mode-hint"></p>
+      </div>
+
+      <div class="field">
+        <div class="row">
+          <label for="rendement">Verwacht rendement per jaar</label>
+          <output class="num" id="rendement-out" for="rendement"></output>
+        </div>
+        <input type="range" id="rendement" min="0" max="20" step="0.1" value="6"
+               aria-label="Verwacht rendement per jaar in procenten">
       </div>
     </section>
 
-    <div class="results">
+    <section class="card chart-card" aria-labelledby="chart-title">
+      <div class="chart-head">
+        <h2 id="chart-title">Vermogensopbouw</h2>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="chart-wrap" id="chart-wrap"></div>
+      <p class="note">Fictieve bedragen over <span id="horizon"></span> jaar bij een vast jaarrendement. De verticale as is bewust zonder bedragen: het gaat hier om de vorm van de groei, niet om de uitkomst.</p>
+    </section>
 
-      <section class="card hero" aria-live="polite">
-        <div class="label">Verwacht eindkapitaal in euro's van nu</div>
-        <p class="value" id="hero-value">—</p>
-        <p class="sub" id="hero-sub">—</p>
-      </section>
-
-      <section class="card chart-card" aria-labelledby="chart-title">
-        <div class="chart-head">
-          <h2 id="chart-title">Vermogensopbouw</h2>
-          <div class="legend" id="legend"></div>
-        </div>
-        <div class="chart-wrap" id="chart-wrap">
-          <div class="tooltip" id="tooltip" role="status" aria-live="off"></div>
-        </div>
-        <p class="note">Indicatieve berekening op basis van een vast jaarrendement. Werkelijke rendementen schommelen en zijn niet gegarandeerd; dit is geen financieel advies.</p>
-      </section>
-
-      <div class="stats" id="stats"></div>
-
-      <details class="card table-view">
-        <summary>Toon de cijfers per jaar</summary>
-        <div class="table-scroll"><table id="table"><thead></thead><tbody></tbody></table></div>
-      </details>
-
-    </div>
   </main>
 </div>
 <script src="app.js"></script>

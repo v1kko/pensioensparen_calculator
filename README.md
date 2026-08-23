@@ -1,23 +1,19 @@
 # Pensioenbeleggen calculator
 
-Een statische rekentool die laat zien hoe een maandelijkse inleg tot je
-pensioendatum uitgroeit — nominaal, gecorrigeerd voor inflatie, en afgezet
-tegen wat je zelf hebt ingelegd.
+Een statische rekentool met één uitgangspunt en één knop: leg maandelijks in of
+in één keer, kies een verwacht jaarrendement, en zie de vorm van de groei.
 
 ## Uitgangspunten van de berekening
 
-- Maandelijkse samengestelde groei; de inleg gaat aan het **begin** van de maand in
-  en groeit die maand dus mee.
-- Het nettorendement is `bruto rendement − fondskosten (TER)`, omgerekend naar een
-  maandrente via `(1 + r)^(1/12) − 1`.
-- De maandinleg wordt elk jaar verhoogd met het opgegeven indexatiepercentage.
-- Het reële vermogen is het nominale vermogen gedeeld door `(1 + inflatie)^jaren`,
-  oftewel de koopkracht in euro's van vandaag.
-- "Betaalde fondskosten" is het verschil met dezelfde belegging zónder TER, dus
-  inclusief het rendement dat je over die kosten misgelopen bent.
+- Twee scenario's met **fictieve** bedragen: € 100 per maand, of € 1.000 eenmalig
+  aan het begin.
+- Maandelijkse samengestelde groei; de maandinleg gaat aan het **begin** van de
+  maand in en groeit die maand dus mee. De maandrente is `(1 + r)^(1/12) − 1`.
+- Vast jaarrendement van 0 tot 20 %, over een horizon van 30 jaar.
+- De verticale as heeft bewust **geen** bedragen: de bedragen zijn verzonnen, het
+  gaat om de vorm van de curve.
 
-Belastingen (box 3, lijfrente-aftrek, jaarruimte) zitten er bewust niet in — dat
-hangt te veel van je persoonlijke situatie af. Indicatief, geen financieel advies.
+Inflatie, kosten en belastingen zitten er niet in. Indicatief, geen financieel advies.
 
 ## Techniek
 
@@ -27,26 +23,11 @@ Geen build, geen dependencies, geen externe requests. Drie bestanden:
 |---|---|
 | `index.html` | markup |
 | `style.css` | design-tokens (licht/donker) en layout |
-| `app.js` | rekenmodel, URL-state, met de hand getekende SVG-grafiek |
+| `app.js` | rekenmodel en de met de hand getekende SVG-grafiek |
 
-De grafiek is handgetekende inline SVG, geen chartlibrary. Dat scheelt een
-dependency én een netwerkrequest, en het is voor één lijngrafiek nauwelijks meer
-code dan het configureren van een library.
-
-### Deelbare invoer
-
-De invoer staat in de URL-hash, bijvoorbeeld:
-
-```
-index.html#a=35&p=68&s=10000&m=350&i=2&r=6.5&k=0.25&f=2
-```
-
-`a` leeftijd · `p` pensioenleeftijd · `s` startkapitaal · `m` maandinleg ·
-`i` indexatie · `r` bruto rendement · `k` TER · `f` inflatie.
-
-Een link delen bewaart dus het hele scenario. De hash wordt met
-`history.replaceState` bijgewerkt, zodat het slepen van een slider niet honderd
-entries in de terugknop achterlaat.
+De grafiek is handgetekende inline SVG, geen chartlibrary. De bedragen en de
+horizon staan als constanten (`MAANDINLEG`, `EENMALIG`, `HORIZON`) bovenin
+`app.js`.
 
 ## Lokaal draaien
 
@@ -65,10 +46,3 @@ relatief, dus de submap in die URL vraagt geen configuratie.
 
 Het bestand `.nojekyll` is voor deze workflow niet nodig (Jekyll draait hier niet),
 maar staat er zodat overschakelen naar *Deploy from a branch* ook meteen werkt.
-
-## Toegankelijkheid
-
-Het kleurenpalet is gevalideerd op kleurenblindheid en contrast in zowel de
-lichte als de donkere modus. Elke waarde is ook zonder hover bereikbaar via de
-legenda, de eindlabels en de tabelweergave; de grafiek is focusbaar en met de
-pijltjestoetsen te doorlopen.
