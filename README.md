@@ -13,7 +13,23 @@ in één keer, kies een verwacht jaarrendement, en zie de vorm van de groei.
 - De verticale as heeft bewust **geen** bedragen: de bedragen zijn verzonnen, het
   gaat om de vorm van de curve.
 
-Inflatie, kosten en belastingen zitten er niet in. Indicatief, geen financieel advies.
+Belastingen zitten er wél in, met de tarieven van 2026:
+
+- **Bij inleg** is de lijfrentepremie aftrekbaar tegen het volle marginale tarief
+  (35,75 / 37,56 / 49,5 %); zonder pensioensparen blijft alleen het nettodeel over.
+- **Onderweg** valt alleen de eigen belegging in box 3: 36 % over een forfaitair
+  rendement van 6 %, geheven over de stand op 1 januari. Pensioenvermogen niet.
+  Dit is meestal het grootste verschil tussen de twee lijnen. Omdat de bedragen
+  fictief zijn, is het heffingsvrije vermogen een **jaartal**: je kiest in welk
+  jaar je vermogen erboven uitkomt, en pas vanaf het jaar daarna wordt geheven.
+  Staat die schuif op 30, dan blijf je binnen deze horizon eronder.
+- **Bij opname** inkomstenbelasting plus 4,85 % bijdrage Zvw over de uitkering,
+  en optioneel 20 % revisierente over de afgetrokken inleg. Het AOW-tarief van
+  17,85 % en revisierente sluiten elkaar uit en zijn niet samen te kiezen.
+
+Jaarruimte, heffingskortingen, kosten en inflatie zitten er niet in, en boven de
+vrijstelling wordt hier over het hele saldo geheven — zie het blok *Wat hier niet in zit* op de pagina zelf.
+Indicatief, geen financieel advies.
 
 ## Techniek
 

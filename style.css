@@ -90,6 +90,9 @@ button:focus-visible, [tabindex]:focus-visible {
 /* ---- layout ------------------------------------------------------------ */
 .layout { display: grid; grid-template-columns: 322px minmax(0, 1fr); gap: 20px; align-items: start; }
 @media (max-width: 900px) { .layout { grid-template-columns: minmax(0, 1fr); } }
+/* rechterkolom: de grafiek met de kanttekeningen er direct onder, los van de
+   hoogte van de uitgangspuntenkaart ernaast. */
+.kolom { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 
 /* ---- controls ---------------------------------------------------------- */
 .controls h2, .chart-card h2 { margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
@@ -109,6 +112,8 @@ button:focus-visible, [tabindex]:focus-visible {
 .segmented.tarieven { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 1fr; }
 .segmented.tarieven button { padding: 7px 3px; font-variant-numeric: tabular-nums; }
 .segmented button[aria-checked="true"] { color: var(--text-primary); background: var(--plane); border-color: var(--border); font-weight: 600; }
+.segmented button[disabled] { opacity: 0.38; cursor: not-allowed; }
+.segmented button[disabled]:hover { color: var(--text-secondary); border-color: transparent; }
 
 /* ---- chart ------------------------------------------------------------- */
 .chart-card h2 .wenk {
@@ -143,3 +148,9 @@ button:focus-visible, [tabindex]:focus-visible {
 .tip .neer { color: var(--loss); font-weight: 600; }
 
 .note { margin: 12px 0 0; font-size: 12.5px; color: var(--text-muted); }
+
+/* ---- kanttekeningen ---------------------------------------------------- */
+.kanttekeningen h2 { margin: 0 0 14px; font-size: 13px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.06em; }
+ul.note { margin: 0; padding-left: 18px; }
+ul.note li + li { margin-top: 7px; }
+ul.note strong { color: var(--text-secondary); font-weight: 600; }

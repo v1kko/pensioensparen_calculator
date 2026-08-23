@@ -46,8 +46,8 @@
           <label id="inleg-schijf-label">Belastingschijf bij inleg</label>
         </div>
         <div class="segmented tarieven" role="radiogroup" aria-labelledby="inleg-schijf-label">
-          <button type="button" role="radio" data-inleg-schijf="0" aria-checked="false">35,7&nbsp;%</button>
-          <button type="button" role="radio" data-inleg-schijf="1" aria-checked="true">37,6&nbsp;%</button>
+          <button type="button" role="radio" data-inleg-schijf="0" aria-checked="false">35,75&nbsp;%</button>
+          <button type="button" role="radio" data-inleg-schijf="1" aria-checked="true">37,56&nbsp;%</button>
           <button type="button" role="radio" data-inleg-schijf="2" aria-checked="false">49,5&nbsp;%</button>
         </div>
         <p class="hint" id="inleg-schijf-hint"></p>
@@ -58,12 +58,33 @@
           <label id="uitkering-schijf-label">Belastingschijf bij uitbetaling</label>
         </div>
         <div class="segmented tarieven" role="radiogroup" aria-labelledby="uitkering-schijf-label">
-          <button type="button" role="radio" data-uitkering-schijf="0" aria-checked="true">17,9&nbsp;%</button>
-          <button type="button" role="radio" data-uitkering-schijf="1" aria-checked="false">35,7&nbsp;%</button>
-          <button type="button" role="radio" data-uitkering-schijf="2" aria-checked="false">37,6&nbsp;%</button>
+          <button type="button" role="radio" data-uitkering-schijf="0" aria-checked="true">17,85&nbsp;%</button>
+          <button type="button" role="radio" data-uitkering-schijf="1" aria-checked="false">35,75&nbsp;%</button>
+          <button type="button" role="radio" data-uitkering-schijf="2" aria-checked="false">37,56&nbsp;%</button>
           <button type="button" role="radio" data-uitkering-schijf="3" aria-checked="false">49,5&nbsp;%</button>
         </div>
         <p class="hint" id="uitkering-schijf-hint"></p>
+      </div>
+
+      <div class="field">
+        <div class="row">
+          <label for="box3-jaar">Boven de box 3-vrijstelling vanaf</label>
+          <output class="num" id="box3-jaar-out" for="box3-jaar"></output>
+        </div>
+        <input type="range" id="box3-jaar" min="0" max="30" step="1" value="0"
+               aria-label="Jaar waarin je eigen belegging boven het heffingsvrije vermogen uitkomt">
+        <p class="hint" id="box3-hint"></p>
+      </div>
+
+      <div class="field">
+        <div class="row">
+          <label id="zvw-label">Bijdrage Zvw over de uitkering</label>
+        </div>
+        <div class="segmented" role="radiogroup" aria-labelledby="zvw-label">
+          <button type="button" role="radio" data-zvw="ja" aria-checked="true">Meerekenen</button>
+          <button type="button" role="radio" data-zvw="nee" aria-checked="false">Buiten beschouwing</button>
+        </div>
+        <p class="hint" id="zvw-hint"></p>
       </div>
 
       <div class="field">
@@ -77,16 +98,31 @@
       </div>
     </section>
 
-    <section class="card chart-card" aria-labelledby="chart-title">
-      <div class="chart-head">
-        <h2 id="chart-title">Vermogensopbouw<span class="wenk" aria-hidden="true">beweeg over de grafiek voor het exacte verschil</span></h2>
-        <div class="legend" id="legend"></div>
-      </div>
-      <div class="chart-wrap" id="chart-wrap">
-        <div class="tip" id="tip" aria-hidden="true" hidden></div>
-      </div>
-      <p class="note">Fictieve bedragen over <span id="horizon"></span> jaar bij een vast jaarrendement. De verticale as is bewust zonder bedragen: het gaat hier om de vorm van de groei, niet om de uitkomst. Beide lijnen zijn na belasting — bij pensioensparen gaat die er bij opname af, zonder pensioensparen al bij de inleg.</p>
-    </section>
+    <div class="kolom">
+      <section class="card chart-card" aria-labelledby="chart-title">
+        <div class="chart-head">
+          <h2 id="chart-title">Vermogensopbouw<span class="wenk" aria-hidden="true">beweeg over de grafiek voor het exacte verschil</span></h2>
+          <div class="legend" id="legend"></div>
+        </div>
+        <div class="chart-wrap" id="chart-wrap">
+          <div class="tip" id="tip" aria-hidden="true" hidden></div>
+        </div>
+        <p class="note">Fictieve bedragen over <span id="horizon"></span> jaar bij een vast jaarrendement. De verticale as is bewust zonder bedragen: het gaat hier om de vorm van de groei, niet om de uitkomst. Beide lijnen zijn na belasting — bij pensioensparen gaat die er bij opname af, zonder pensioensparen al bij de inleg, plus box 3 over wat er staat zodra dat boven de vrijstelling uitkomt.</p>
+      </section>
+
+      <section class="card kanttekeningen" aria-labelledby="kanttekeningen-title">
+        <h2 id="kanttekeningen-title">Wat hier niet in zit</h2>
+        <ul class="note">
+          <li><strong>Jaarruimte.</strong> Aftrekken mag alleen tot je jaar- en reserveringsruimte. Met een goede pensioenregeling van je werkgever blijft daar weinig van over, en zonder aftrek bestaat de linkerlijn niet.</li>
+          <li><strong>Eén vast tarief bij uitbetaling.</strong> Een lijfrente keert over meerdere jaren uit en loopt dan door je schijven heen. Het AOW-tarief geldt bovendien alleen over je totale inkomen tot ongeveer € 38.900, AOW meegerekend — bij een grotere pot haal je dat lage tarief niet over het geheel.</li>
+          <li><strong>Heffingskortingen.</strong> De aftrek verlaagt je verzamelinkomen en levert daardoor extra algemene heffingskorting op; de uitkering verhoogt het later weer en kan de ouderenkorting drukken. Beide effecten zitten hier niet in.</li>
+          <li><strong>Het heffingsvrije vermogen in box 3</strong> (€ 59.357 per persoon in 2026). De bedragen hier zijn fictief, dus in plaats van een drempel in euro's kies je zelf het jaar waarin je erboven komt. Vanaf dat jaar heft de grafiek over je hele saldo, terwijl in werkelijkheid het vrijgestelde deel eraf blijft. Het forfait wordt hier ook in magere jaren geheven; met de tegenbewijsregeling betaal je over een lager werkelijk rendement. Vanaf 2028 zou het werkelijke rendement de norm worden.</li>
+          <li><strong>Tegenbewijs bij revisierente.</strong> Bij opname binnen tien jaar na de storting kun je de boete beperken tot het werkelijk behaalde rendement, en bij een kleine lijfrente is er helemaal geen revisierente.</li>
+          <li><strong>Kosten en inflatie.</strong> Beide lijnen rekenen met hetzelfde brutorendement en met euro's van vandaag.</li>
+        </ul>
+        <p class="note">Indicatief, geen financieel advies. Tarieven volgens de cijfers voor 2026.</p>
+      </section>
+    </div>
 
   </main>
 </div>

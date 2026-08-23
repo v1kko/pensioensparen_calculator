@@ -7,22 +7,45 @@ var MAANDINLEG = 100;     // euro per maand
 var EENMALIG = 1000;      // euro, in jaar 0
 var HORIZON = 30;         // jaren op de x-as
 
-/** Belastingschijven box 1, bij benadering. Met pensioensparen is de inleg
- *  aftrekbaar; zonder pensioensparen blijft alleen het nettodeel over. */
+/** Belastingschijven box 1 (2026), bij benadering. Met pensioensparen is de
+ *  inleg aftrekbaar; zonder pensioensparen blijft alleen het nettodeel over.
+ *  Lijfrentepremie valt buiten de tariefcorrectie voor aftrekposten, dus de
+ *  aftrek gaat wél tegen het volle marginale tarief — ook tegen 49,5 %. */
 var INLEG_SCHIJVEN = [
-  { tarief: 35.7, omschrijving: 'inkomen tot ongeveer € 38.000' },
-  { tarief: 37.6, omschrijving: 'inkomen tot ongeveer € 77.000' },
+  { tarief: 35.75, omschrijving: 'inkomen tot ongeveer € 38.900' },
+  { tarief: 37.56, omschrijving: 'inkomen tot ongeveer € 78.400' },
   { tarief: 49.5, omschrijving: 'inkomen daarboven' }
 ];
 
 /** Bij uitbetaling geldt hetzelfde rijtje, plus het lagere tarief van de eerste
- *  schijf na de AOW-leeftijd: daarin zit geen AOW-premie meer. */
+ *  schijf na de AOW-leeftijd: daarin zit geen AOW-premie meer. Dat lage tarief
+ *  bestaat alleen ná de pensioendatum — vandaar `aow`, waarmee de boeterente
+ *  wordt uitgesloten. */
 var UITKERING_SCHIJVEN = [
-  { tarief: 17.9, omschrijving: 'eerste schijf ná de AOW-leeftijd, zonder AOW-premie' },
-  { tarief: 35.7, omschrijving: 'eerste schijf vóór de AOW-leeftijd' },
-  { tarief: 37.6, omschrijving: 'inkomen tot ongeveer € 77.000' },
-  { tarief: 49.5, omschrijving: 'inkomen daarboven' }
+  { tarief: 17.85, aow: true, omschrijving: 'eerste schijf ná de AOW-leeftijd, zonder AOW-premie' },
+  { tarief: 35.75, aow: false, omschrijving: 'eerste schijf vóór de AOW-leeftijd' },
+  { tarief: 37.56, aow: false, omschrijving: 'inkomen tot ongeveer € 78.400' },
+  { tarief: 49.5, aow: false, omschrijving: 'inkomen daarboven' }
 ];
+
+/** Box 3 (2026): 36 % over een forfaitair rendement van 6 % op overige
+ *  bezittingen, dus ruim 2 % van je vermogen per jaar, geheven over de stand op
+ *  1 januari. Pensioenvermogen valt buiten box 3, wat je zelf belegt niet — dit
+ *  is het grootste verschil tussen de twee lijnen. Vanaf 2028 zou het
+ *  werkelijke rendement worden belast.
+ *
+ *  Het heffingsvrije vermogen staat hier niet als bedrag maar als jaartal: de
+ *  bedragen in deze grafiek zijn fictief, dus een drempel in euro's zegt niets,
+ *  terwijl 'in welk jaar kom ik erboven' wél te schatten is. */
+var BOX3 = { forfait: 6.0, tarief: 36 };
+
+/** Wat box 3 per jaar van het vermogen afhaalt, in procenten. */
+var BOX3_PER_JAAR = BOX3.forfait * BOX3.tarief / 100;
+
+/** Bijdrage Zvw over lijfrente-uitkeringen (2026, lage tarief). Box 3-inkomen
+ *  telt niet mee voor het bijdrage-inkomen, dus dit raakt alleen de
+ *  pensioenlijn. Het maximumbijdrage-inkomen zit er niet in. */
+var ZVW = 4.85;
 
 /** De twee lijnen in de grafiek; beide na belasting. */
 var SERIES = [
@@ -38,15 +61,33 @@ var state = {
   rendement: 6,           // procent per jaar
   inlegSchijf: 1,         // index in INLEG_SCHIJVEN
   uitkeringSchijf: 0,     // index in UITKERING_SCHIJVEN
-  boete: 0                // procent revisierente over de afgetrokken inleg
+  boete: 0,               // procent revisierente over de afgetrokken inleg
+  box3Jaar: 0,            // jaar waarin de eigen belegging boven het
+                          // heffingsvrije vermogen uitkomt; HORIZON = nooit
+  zvw: true               // bijdrage Zvw over de pensioenuitkering meerekenen
 };
 
 var model = null;
+
+/* De boeteslider wordt ook vanuit de code teruggezet en moet dan meebewegen. */
+var boeteInput = null;
+
+/** Wat er bij opname van het pensioenvermogen af gaat, in procenten:
+ *  inkomstenbelasting plus eventueel de bijdrage Zvw. */
+function heffingBijOpname(s) {
+  return UITKERING_SCHIJVEN[s.uitkeringSchijf].tarief + (s.zvw ? ZVW : 0);
+}
 
 /** Maandelijkse samengestelde groei; inleg aan het begin van de maand.
  *  Twee reeksen, allebei na belasting: het pensioenvermogen groeit met de
  *  volledige (aftrekbare) inleg en wordt bij opname belast, daarnaast groeit
  *  de inleg die na belasting overblijft. Eén punt per jaar, plus het startpunt.
+ *
+ *  Onderweg lopen de twee lijnen ook fiscaal uiteen. Wat je zelf belegt zit in
+ *  box 3 en wordt vanaf het jaar ná `box3Jaar` — het jaar waarin het boven het
+ *  heffingsvrije vermogen uitkomt — elk jaar op de peildatum belast;
+ *  pensioenvermogen niet. Over de pensioenuitkering komt naast
+ *  inkomstenbelasting de bijdrage Zvw, over box 3-vermogen niet.
  *
  *  De boeterente (revisierente) gaat er bij opname vóór de pensioendatum
  *  bovenop, gerekend over de inleg die is afgetrokken — niet over het
@@ -54,7 +95,8 @@ var model = null;
 function project(s) {
   var mRate = Math.pow(1 + s.rendement / 100, 1 / 12) - 1;
   var naInleg = 1 - INLEG_SCHIJVEN[s.inlegSchijf].tarief / 100;
-  var naUitkering = 1 - UITKERING_SCHIJVEN[s.uitkeringSchijf].tarief / 100;
+  var naUitkering = 1 - heffingBijOpname(s) / 100;
+  var box3 = BOX3_PER_JAAR / 100;
   var boete = s.boete / 100;
   var monthly = s.mode === 'maandelijks' ? MAANDINLEG : 0;
   var start = s.mode === 'eenmalig' ? EENMALIG : 0;
@@ -65,6 +107,11 @@ function project(s) {
 
   for (var y = 0; y <= HORIZON; y++) {
     if (y > 0) {
+      /* peildatum 1 januari: de heffing gaat over de stand aan het begin van
+       * het jaar, vóór de inleg van dat jaar. Pas ná het jaar waarin het
+       * vermogen boven de vrijstelling uitkomt; staat die op HORIZON, dan komt
+       * het binnen deze grafiek nooit zover. */
+      if (y > s.box3Jaar) saldo.eigen -= saldo.eigen * box3;
       for (var m = 0; m < 12; m++) {
         saldo.pensioen = (saldo.pensioen + monthly) * (1 + mRate);
         saldo.eigen = (saldo.eigen + monthly * naInleg) * (1 + mRate);
@@ -165,9 +212,11 @@ function drawChart() {
         ? 'maandelijkse inleg van ' + MAANDINLEG + ' euro'
         : 'eenmalige inleg van ' + EENMALIG + ' euro') +
       '. De ene lijn is pensioensparen, belast met ' +
-      num1.format(UITKERING_SCHIJVEN[state.uitkeringSchijf].tarief) + ' procent bij uitbetaling, ' +
+      num1.format(heffingBijOpname(state)) + ' procent bij uitbetaling, ' +
       'de andere dezelfde inleg na ' + num1.format(INLEG_SCHIJVEN[state.inlegSchijf].tarief) +
-      ' procent belasting vooraf.' + (state.boete > 0
+      ' procent belasting vooraf' + (state.box3Jaar < HORIZON
+        ? ' en vanaf jaar ' + (state.box3Jaar + 1) + ' elk jaar box 3-heffing'
+        : ', zonder box 3-heffing') + '.' + (state.boete > 0
         ? ' Over de pensioeninleg komt ' + num1.format(state.boete) + ' procent boeterente.'
         : '') +
       ' Het vlak tussen de lijnen is groen waar pensioensparen meer oplevert en rood waar het minder oplevert.'
@@ -357,7 +406,14 @@ function renderControls() {
     b.setAttribute('aria-checked', String(Number(b.dataset.inlegSchijf) === state.inlegSchijf));
   });
   document.querySelectorAll('.segmented button[data-uitkering-schijf]').forEach(function (b) {
-    b.setAttribute('aria-checked', String(Number(b.dataset.uitkeringSchijf) === state.uitkeringSchijf));
+    var i = Number(b.dataset.uitkeringSchijf);
+    b.setAttribute('aria-checked', String(i === state.uitkeringSchijf));
+    /* Het AOW-tarief en revisierente sluiten elkaar uit: de boete geldt juist
+     * bij opname vóór de pensioendatum, het lage tarief pas erna. */
+    b.disabled = UITKERING_SCHIJVEN[i].aow === true && state.boete > 0;
+  });
+  document.querySelectorAll('.segmented button[data-zvw]').forEach(function (b) {
+    b.setAttribute('aria-checked', String((b.dataset.zvw === 'ja') === state.zvw));
   });
 
   var inlegSchijf = INLEG_SCHIJVEN[state.inlegSchijf];
@@ -372,12 +428,34 @@ function renderControls() {
     num1.format(100 - inlegSchijf.tarief) + ' % van je inleg over om te beleggen.';
   document.getElementById('uitkering-schijf-hint').textContent =
     hoofdletter(uitkeringSchijf.omschrijving) + '. Van je pensioenvermogen houd je ' +
-    num1.format(100 - uitkeringSchijf.tarief) + ' % over.';
+    num1.format(100 - heffingBijOpname(state)) + ' % over' +
+    (state.zvw ? ', inclusief de bijdrage Zvw' : '') + '.';
+  document.getElementById('box3-jaar-out').textContent =
+    state.box3Jaar >= HORIZON ? 'nooit' : 'jaar ' + state.box3Jaar;
+  document.getElementById('box3-hint').textContent = state.box3Jaar >= HORIZON
+    ? 'Je eigen belegging blijft deze ' + HORIZON + ' jaar onder het heffingsvrije ' +
+      'vermogen (€ 59.357 per persoon in 2026), dus zonder box 3-heffing. ' +
+      'Pensioenvermogen valt er sowieso buiten.'
+    : (state.box3Jaar === 0
+        ? 'Je bent een rijke tata, en je weet wat ze zeggen, geld creëert geld, voor jou ' +
+          'is pensioensparen sowieso vet voordelig. Vanaf jaar 1 '
+        : 'Tot en met jaar ' + state.box3Jaar + ' blijf je onder het heffingsvrije ' +
+          'vermogen (€ 59.357 per persoon in 2026); vanaf jaar ' + (state.box3Jaar + 1) + ' ') +
+      'zit je eigen belegging in box 3: ' + num1.format(BOX3.tarief) + ' % over een ' +
+      'forfaitair rendement van ' + num1.format(BOX3.forfait) + ' %, dus ' +
+      num1.format(BOX3_PER_JAAR) + ' % van je vermogen per jaar, geheven op 1 januari. ' +
+      'Pensioenvermogen valt buiten box 3.';
+  document.getElementById('zvw-hint').textContent = state.zvw
+    ? 'Over lijfrente-uitkeringen betaal je ' + num1.format(ZVW) + ' % bijdrage Zvw bovenop de ' +
+      'inkomstenbelasting. Over box 3-vermogen niet.'
+    : 'Alleen inkomstenbelasting over de uitkering.';
+  if (boeteInput) boeteInput.value = state.boete;
   document.getElementById('boete-out').textContent = num1.format(state.boete) + ' %';
   document.getElementById('boete-hint').textContent = state.boete === 0
     ? 'Opnemen op de pensioendatum: geen boete.'
     : 'Revisierente bij opnemen vóór de pensioendatum. Die wordt gerekend over de ' +
-      'afgetrokken inleg, niet over het rendement.';
+      'afgetrokken inleg, niet over het rendement. Het AOW-tarief vervalt daarmee: ' +
+      'dat geldt pas ná de pensioendatum.';
 }
 
 function render() {
@@ -433,6 +511,15 @@ function init() {
   document.querySelectorAll('.segmented button[data-uitkering-schijf]').forEach(function (b) {
     b.addEventListener('click', function () {
       state.uitkeringSchijf = Number(b.dataset.uitkeringSchijf);
+      /* Kiest iemand het AOW-tarief, dan is er per definitie geen revisierente. */
+      if (UITKERING_SCHIJVEN[state.uitkeringSchijf].aow) state.boete = 0;
+      render();
+    });
+  });
+
+  document.querySelectorAll('.segmented button[data-zvw]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.zvw = b.dataset.zvw === 'ja';
       render();
     });
   });
@@ -444,12 +531,25 @@ function init() {
     render();
   });
 
+  var box3Jaar = document.getElementById('box3-jaar');
+  box3Jaar.max = HORIZON;
+  box3Jaar.value = state.box3Jaar;
+  box3Jaar.addEventListener('input', function () {
+    state.box3Jaar = parseInt(box3Jaar.value, 10);
+    render();
+  });
+
   var boete = document.getElementById('boete');
   boete.value = state.boete;
   boete.addEventListener('input', function () {
     state.boete = parseFloat(boete.value);
+    /* Boete betekent opnemen vóór de pensioendatum; het AOW-tarief kan dan niet. */
+    if (state.boete > 0 && UITKERING_SCHIJVEN[state.uitkeringSchijf].aow) {
+      state.uitkeringSchijf = 1;
+    }
     render();
   });
+  boeteInput = boete;
 
   initTheme();
   render();
