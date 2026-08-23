@@ -16,7 +16,9 @@ Static pension-savings calculator. No build, no dependencies, no external reques
   (`:root`, the `prefers-color-scheme: dark` media query, and `:root[data-theme="dark"]`),
   otherwise a theme silently loses them.
 - Anything that changes what is drawn must call `render()` (state → `project()` → controls,
-  legend, chart). `drawChart()` alone is only for resize, where the model is unchanged.
+  legend, chart). `drawChart()` alone is only for resize, where the model is unchanged, and
+  `tekenHover()` alone is only for cursorbewegingen — die werkt de markeringslaag en de
+  tooltip bij, zonder het model of de SVG opnieuw op te bouwen.
 - The y-axis is deliberately unlabelled: the amounts are fictional, the curve's *shape*
   is the message. Don't "improve" it by adding euro values to the gridlines.
 
@@ -92,7 +94,9 @@ Notes:
 - The chart is drawn from `host.clientWidth`, so viewport width changes the SVG.
   Compare screenshots at the same viewport, and check ≤900px too — the layout collapses
   to one column there.
-- Expect 2 `<path>` elements (filled area + line). Zero or one means the draw broke.
+- Expect ≥3 `<path>` elements: één lijn per reeks plus één gevuld vlak per stuk tussen de
+  kruisingen — meestal dus 3, en meer zodra de lijnen elkaar snijden. Minder betekent dat
+  het tekenen stuk is.
 
 ## Deploy
 
